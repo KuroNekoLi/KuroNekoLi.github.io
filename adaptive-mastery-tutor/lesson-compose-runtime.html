@@ -46,7 +46,7 @@
     <div class="feedback"></div><div class="review"></div>
   </section>
 
-  <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">按下「提交」後，網站會驗證答案、更新本機歷史紀錄，並自動將 evidence report 複製到剪貼簿。接著回到目前對話貼上即可，tutor 會繼續分析並選擇下一個學習任務。</p><div class="report" id="report"></div><div class="button-row"><button class="button green" id="submit">提交</button><a class="button secondary" href="history.html">查看紀錄</a></div><p class="muted" id="handoff-status">尚未提交至 tutor handoff。</p></section>
+    <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">按下「提交」後，網站會驗證答案、更新本機歷史紀錄，並將完整 evidence handoff 複製到剪貼簿，同時提供 JSON 下載。接著回到目前對話貼上即可，tutor 會繼續分析並選擇下一個學習任務。</p><div class="report" id="report"></div><div class="button-row"><button class="button green" id="submit">提交</button><a class="button secondary" href="lesson-compose-snapshot.html">繼續 snapshot 診斷</a><a class="button secondary" href="history.html">查看紀錄</a></div><p class="muted" id="handoff-status">尚未提交至 tutor handoff。</p></section>
   <div class="status" id="status">進度：尚未提交任何題目</div>
 </main>
 <script src="app.js"></script>
@@ -78,16 +78,22 @@
     emit('task_completed', 'compose-runtime-diagnostic', { completed_questions: completed, total_questions: 2 });
     const report = { protocol: 'Interactive Evidence Protocol', schema_version: '1.0', session_id: sessionId, task_id: 'compose-runtime-diagnostic', representation_id: 'compose-runtime-code-trace-v3', started_at: new Date().toISOString(), completed_at: new Date().toISOString(), learner_context: { domain: 'Android Compose Runtime', language: 'zh-Hant' }, answers, evidence_events: events, note: 'Evidence is pending tutor review; local verification does not itself finalize mastery.' };
     const history = state.history || []; answers.forEach(answer => history.push({ timestamp: new Date().toISOString(), title: document.querySelector(`[data-task="${answer.task_id}"]`).dataset.title, correct: answer.correct, independent: true, eventCount: events.filter(event => event.task_id === answer.task_id).length })); state.history = history; state.nodes[2].status = '有新 evidence，待 tutor review'; state.nodes[2].lastEvidence = new Date().toISOString(); window.TUTOR.saveState(state);
-    document.querySelector('.final-report').style.display = 'block'; document.getElementById('report').textContent = JSON.stringify(report, null, 2); document.getElementById('status').textContent = '進度：兩題完成，請下載 report 帶回 tutor';
+    document.querySelector('.final-report').style.display = 'block'; document.getElementById('report').textContent = JSON.stringify(report, null, 2); document.getElementById('status').textContent = '進度：兩題完成，請提交 handoff 後繼續下一頁';
   }
   wire(document.getElementById('q1')); wire(document.getElementById('q2'));
   document.querySelector('#q1 .next').addEventListener('click', () => { const q2 = document.getElementById('q2'); q2.style.display = 'block'; q2.scrollIntoView({ behavior: 'smooth' }); });
   document.getElementById('submit').addEventListener('click', async () => {
     const report = document.getElementById('report').textContent;
     const status = document.getElementById('handoff-status');
+    const blob = new Blob([report], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'compose-runtime-evidence-report.json';
+    link.click();
+    URL.revokeObjectURL(link.href);
     try {
       await navigator.clipboard.writeText(report);
-      status.textContent = '✓ evidence 已複製到剪貼簿，請回到目前對話直接貼上。';
+      status.textContent = '✓ evidence handoff 已複製並下載，請回到目前對話直接貼上。';
       status.style.color = 'var(--green)';
     } catch {
       status.textContent = '網站已完成驗證，但瀏覽器拒絕剪貼簿權限；請手動複製上方 report 後貼回目前對話。';

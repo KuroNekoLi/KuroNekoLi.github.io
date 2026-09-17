@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Compose Snapshot Lesson · Adaptive Research Tutor</title><link rel="stylesheet" href="styles.css"></head>
+<body data-page="map">
+<main class="shell">
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">A</span><span>Adaptive Research Tutor</span></a><nav class="nav"><a data-nav="dashboard" href="index.html">Dashboard</a><a data-nav="map" href="map.html">學習地圖</a><a data-nav="history" href="history.html">學習紀錄</a></nav></header>
+  <section class="hero"><div class="eyebrow">Node 2 · Compose Runtime · Diagnostic 03</div><h1>Snapshot 與 derivedStateOf code trace</h1><p class="lead">這一題只測一個證據目標：你能否區分 snapshot read tracking、derived state 的重新計算，以及下游 scope 是否真的被 invalidate。</p></section>
+
+  <section class="panel question" data-task="compose-snapshot-derived-state-01" data-title="Compose Runtime：snapshot 與 derivedStateOf">
+    <h2>情境：derived state 的結果沒有改變</h2>
+    <div class="meta"><span class="tag">LazyListState</span><span class="tag">derivedStateOf</span><span class="tag">0 → 1 → 2</span></div>
+    <pre class="code"><code><span class="kw">@Composable</span>
+<span class="kw">fun</span> <span class="fn">Feed</span>(state: <span class="type">LazyListState</span>) {
+    <span class="kw">val</span> showFab <span class="kw">by</span> <span class="fn">remember</span> {
+        <span class="fn">derivedStateOf</span> {
+            state.firstVisibleItemIndex &gt; <span class="num">0</span>
+        }
+    }
+
+    <span class="fn">Header</span>()
+
+    <span class="kw">if</span> (showFab) {
+        <span class="fn">FloatingActionButton</span>(onClick = {}) {
+            <span class="fn">Text</span>(<span class="str">"Top"</span>)
+        }
+    }
+}</code></pre>
+    <p>當 <code>firstVisibleItemIndex</code> 依序由 <code>0 → 1</code>、再由 <code>1 → 2</code> 改變時，哪個描述最精確？</p>
+    <div class="option-list">
+      <button class="option" data-key="A" data-correct="true" data-explanation="兩次變更都可能使 derivedStateOf 重新評估其讀取的 snapshot state；但只有 0 → 1 讓衍生結果由 false 變 true，因此才需要讓讀取 showFab 的 Feed 重新進入。1 → 2 的衍生結果仍是 true，下游不需要因結果相等而重新組合。Header 沒有讀取變動 state，仍可被 skip。">A．0→1 時衍生結果改變，Feed 需重新進入；1→2 時結果相等，下游 Feed 不必因 showFab 重新組合；Header 兩次都可 skip</button>
+      <button class="option" data-key="B" data-correct="false" data-explanation="derivedStateOf 不是把每次來源 state 變更都直接轉成下游 recomposition。它會追蹤來源，但下游是否被通知還取決於衍生結果是否改變。">B．兩次都會讓 Feed、Header 與 FloatingActionButton 全部重新執行，因為 firstVisibleItemIndex 是 snapshot state</button>
+      <button class="option" data-key="C" data-correct="false" data-explanation="Feed 讀取的是 showFab 這個 derived state；它不是在 body 中直接讀取 firstVisibleItemIndex。1→2 時 derived result 相等，不能推論 Feed 必然重新執行。">C．兩次都只會 invalidate Feed，因為 derivedStateOf 只負責快取，不會改變 invalidation 範圍</button>
+    </div>
+    <div class="button-row"><button class="button submit" disabled>提交此題</button><span class="muted hint">請先選擇預測</span></div>
+    <div class="feedback"></div><div class="review"></div>
+  </section>
+
+  <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">提交後會完成本機驗證、更新網站歷史紀錄、複製完整 handoff JSON，並下載一份 report 作為剪貼簿失敗時的備援。</p><pre class="report" id="report"></pre><div class="button-row"><button class="button green" id="submit">提交並帶回 tutor</button><a class="button secondary" href="history.html">查看紀錄</a></div><p class="muted" id="handoff-status">尚未提交至 tutor handoff。</p></section>
+  <div class="status" id="status">進度：尚未提交任何題目</div>
+</main>
+<script src="app.js"></script>
+<script>
+  const state = window.TUTOR.loadState();
+  const sessionId = crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now();
+  const events = []; let selected = null; let answer = null;
+  const section = document.querySelector('.question');
+  function emit(type, payload) { events.push({ session_id: sessionId, task_id: section.dataset.task, representation_id: 'compose-runtime-snapshot-trace-v1', event_id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + events.length), timestamp: new Date().toISOString(), schema_version: '1.0', semantic_type: type, payload }); }
+  const options = [...section.querySelectorAll('.option')], submit = section.querySelector('.submit');
+  options.forEach(option => option.addEventListener('click', () => { if (section.dataset.submitted) return; options.forEach(item => item.classList.remove('selected')); option.classList.add('selected'); selected = option; submit.disabled = false; section.querySelector('.hint').textContent = '已選擇 ' + option.dataset.key + '，確認後按提交'; emit('prediction_selected', { choice: option.dataset.key, assistance: false }); }));
+  submit.addEventListener('click', () => { if (!selected || section.dataset.submitted) return; section.dataset.submitted = 'true'; submit.disabled = true; options.forEach(item => item.disabled = true); const correct = selected.dataset.correct === 'true'; answer = { task_id: section.dataset.task, selected: selected.dataset.key, correct }; emit('prediction_submitted', { choice: selected.dataset.key, independent: true, hint_requested: false, answer_leakage: false }); emit('answer_submitted', { choice: selected.dataset.key }); emit('verification_result', { correct, verifier: 'deterministic_local_answer_key' }); section.querySelector('.feedback').className = 'feedback show ' + (correct ? 'correct' : 'wrong'); section.querySelector('.feedback').innerHTML = (correct ? '<strong>✓ 判斷正確</strong>' : '<strong>△ 這個選項不正確</strong>') + '<br>' + selected.dataset.explanation; const review = section.querySelector('.review'); review.innerHTML = '<h3>逐項解析</h3>' + options.map(option => { const ok = option.dataset.correct === 'true', chosen = option === selected; return '<div class="review-item ' + (ok ? 'correct-answer' : chosen ? 'selected-wrong' : '') + '"><div class="review-label">' + (ok ? '✓ 正確選項　' : chosen ? '△ 你的選擇　' : '　') + option.dataset.key + '</div><div>' + option.textContent + '</div><div class="review-explanation">' + option.dataset.explanation + '</div></div>'; }).join(''); emit('task_completed', { completed_questions: 1, total_questions: 1 }); const report = { protocol: 'Interactive Evidence Protocol', schema_version: '1.0', session_id: sessionId, task_id: section.dataset.task, representation_id: 'compose-runtime-snapshot-trace-v1', started_at: events[0].timestamp, completed_at: new Date().toISOString(), learner_context: { domain: 'Android Compose Runtime', language: 'zh-Hant' }, answers: [answer], evidence_events: events, note: 'Evidence is pending tutor review; local verification does not itself finalize mastery.' }; state.history = state.history || []; state.history.push({ timestamp: new Date().toISOString(), title: section.dataset.title, correct, independent: true, eventCount: events.length, provenance: 'interactive-evidence', note: 'snapshot read tracking 與 derivedStateOf transfer 待 tutor review' }); state.nodes[2].status = '有新 evidence，待 tutor review'; state.nodes[2].lastEvidence = new Date().toISOString(); window.TUTOR.saveState(state); document.getElementById('report').textContent = JSON.stringify(report, null, 2); document.querySelector('.final-report').style.display = 'block'; document.getElementById('status').textContent = correct ? '進度：本題正確，已產生 handoff' : '進度：本題已記錄混淆，已產生 handoff'; document.querySelector('.final-report').scrollIntoView({ behavior: 'smooth' }); });
+  document.getElementById('submit').addEventListener('click', async () => { const report = document.getElementById('report').textContent; const status = document.getElementById('handoff-status'); const blob = new Blob([report], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'compose-snapshot-evidence-report.json'; link.click(); URL.revokeObjectURL(link.href); try { await navigator.clipboard.writeText(report); status.textContent = '✓ evidence 已複製到剪貼簿並下載；請回到目前對話貼上 JSON。'; status.style.color = 'var(--green)'; } catch { status.textContent = '✓ report 已下載；瀏覽器拒絕剪貼簿權限，請貼上下載的 JSON。'; status.style.color = 'var(--yellow)'; } });
+</script>
+</body>
+</html>
