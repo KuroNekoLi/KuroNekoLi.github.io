@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adaptive Mastery Tutor · Android</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="dashboard">
+<main class="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">A</span><span>Adaptive Mastery Tutor</span></a>
+    <nav class="nav"><a data-nav="dashboard" href="index.html">Dashboard</a><a data-nav="map" href="map.html">學習地圖</a><a data-nav="history" href="history.html">學習紀錄</a></nav>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">Android Development · v3 runtime</div>
+    <h1>你的 Android 高階學習控制台</h1>
+    <p class="lead">這裡不是題庫，而是根據 learner evidence 持續調整的學習系統。你可以看到目前的知識 frontier、mastery 證據與下一個最小診斷任務。</p>
+    <div class="button-row"><a class="button" href="lesson-compose-runtime.html">繼續 Compose Runtime 診斷</a><a class="button secondary" href="map.html">查看完整地圖</a></div>
+  </section>
+
+  <section class="grid grid-3">
+    <div class="panel stat"><div class="stat-label">已建立學習節點</div><div class="stat-value" data-map-coverage>—</div><div class="muted">達到 60% evidence 的節點</div></div>
+    <div class="panel stat"><div class="stat-label">整體 evidence projection</div><div class="stat-value" data-evidence-average>—</div><div class="muted">不是課程完成百分比</div></div>
+    <div class="panel stat"><div class="stat-label">互動作答紀錄</div><div class="stat-value" data-history-count>—</div><div class="muted">local evidence events</div></div>
+  </section>
+
+  <section class="grid grid-2" style="margin-top:16px">
+    <div class="panel"><h2>目前節點：Compose Runtime</h2><p class="muted">已確認基本 recomposition、invalidation 與 skip；下一步驗證 strong skipping、unstable collection 與 immutable collection。</p><div data-dashboard-mastery></div><a class="button secondary" href="lesson-compose-runtime.html">進入互動 lesson</a></div>
+    <div class="panel"><h2>未解混淆</h2><ul class="muted" data-unresolved></ul><div class="button-row"><a class="button secondary" href="history.html">查看診斷紀錄</a></div></div>
+  </section>
+
+  <section class="panel" style="margin-top:16px"><h2>學習地圖總覽</h2><p class="muted">點擊節點可進入對應 lesson；目前只有 Compose Runtime 有可用的互動診斷。</p><div class="map-list" data-dashboard-map></div></section>
+  <footer class="footer">Progress state 會保存在此瀏覽器的 localStorage；提交後請將 evidence report 帶回 tutor 對話以進行持久化分析。</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
