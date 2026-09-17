@@ -73,7 +73,7 @@ function renderMap(container, state) {
     const current = state.nodes[node.id];
     const score = nodeScore(current);
     const status = current.status || '待診斷';
-    const href = node.id === 2 ? 'lesson-compose-snapshot.html' : `#node-${node.id}`;
+    const href = node.id === 2 ? 'lesson-compose-stability.html' : `#node-${node.id}`;
     return `<a class="node" href="${href}">
       <span class="node-index">${node.id}</span>
       <span><span class="node-title">${node.title}</span><span class="node-detail">${node.detail}</span></span>
