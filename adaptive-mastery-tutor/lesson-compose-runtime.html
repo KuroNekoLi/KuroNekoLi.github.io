@@ -46,7 +46,7 @@
     <div class="feedback"></div><div class="review"></div>
   </section>
 
-  <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">本機網站已記錄事件並更新「待 tutor review」狀態。下載這份 report，帶回對話後，tutor 才會正式更新持久化 learner state 與下一個 frontier。</p><div class="report" id="report"></div><div class="button-row"><button class="button green" id="download">下載 evidence report</button><a class="button secondary" href="history.html">查看紀錄</a></div></section>
+  <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">按下「提交」後，網站會驗證答案、更新本機歷史紀錄，並自動將 evidence report 複製到剪貼簿。接著回到目前對話貼上即可，tutor 會繼續分析並選擇下一個學習任務。</p><div class="report" id="report"></div><div class="button-row"><button class="button green" id="submit">提交</button><a class="button secondary" href="history.html">查看紀錄</a></div><p class="muted" id="handoff-status">尚未提交至 tutor handoff。</p></section>
   <div class="status" id="status">進度：尚未提交任何題目</div>
 </main>
 <script src="app.js"></script>
@@ -82,7 +82,18 @@
   }
   wire(document.getElementById('q1')); wire(document.getElementById('q2'));
   document.querySelector('#q1 .next').addEventListener('click', () => { const q2 = document.getElementById('q2'); q2.style.display = 'block'; q2.scrollIntoView({ behavior: 'smooth' }); });
-  document.getElementById('download').addEventListener('click', () => { const blob = new Blob([document.getElementById('report').textContent], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'compose-runtime-evidence-report.json'; link.click(); URL.revokeObjectURL(link.href); });
+  document.getElementById('submit').addEventListener('click', async () => {
+    const report = document.getElementById('report').textContent;
+    const status = document.getElementById('handoff-status');
+    try {
+      await navigator.clipboard.writeText(report);
+      status.textContent = '✓ evidence 已複製到剪貼簿，請回到目前對話直接貼上。';
+      status.style.color = 'var(--green)';
+    } catch {
+      status.textContent = '網站已完成驗證，但瀏覽器拒絕剪貼簿權限；請手動複製上方 report 後貼回目前對話。';
+      status.style.color = 'var(--yellow)';
+    }
+  });
 </script>
 </body>
 </html>
