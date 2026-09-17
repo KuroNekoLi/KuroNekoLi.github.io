@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Compose Runtime Lesson · Adaptive Mastery Tutor</title><link rel="stylesheet" href="styles.css"></head>
+<body data-page="map">
+<main class="shell">
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">A</span><span>Adaptive Mastery Tutor</span></a><nav class="nav"><a data-nav="dashboard" href="index.html">Dashboard</a><a data-nav="map" href="map.html">學習地圖</a><a data-nav="history" href="history.html">學習紀錄</a></nav></header>
+  <section class="hero"><div class="eyebrow">Node 2 · Compose Runtime</div><h1>Strong skipping code trace</h1><p class="lead">先做 prediction，再提交。提交後才會驗證答案、顯示所有選項解析並產生 evidence。這個頁面不會把選擇本身直接當成 mastery。</p></section>
+
+  <section class="panel question" id="q1" data-task="compose-strong-skipping-01" data-title="Compose Runtime：strong skipping 情境 1">
+    <h2>情境 1：只有 selectedId 改變</h2>
+    <div class="meta"><span class="tag">Kotlin 2.0.20+</span><span class="tag">strong skipping ON</span><span class="tag">同一個 List instance</span></div>
+    <pre class="code"><code><span class="kw">@Composable</span>
+<span class="kw">fun</span> <span class="fn">Screen</span>(users: <span class="type">List</span>&lt;<span class="type">User</span>&gt;, selectedId: <span class="type">Int</span>) {
+    <span class="fn">UserList</span>(users)
+    <span class="fn">SelectedLabel</span>(selectedId)
+}
+
+<span class="kw">@Composable fun</span> <span class="fn">UserList</span>(users: <span class="type">List</span>&lt;<span class="type">User</span>&gt;) {
+    users.<span class="fn">forEach</span> { <span class="fn">UserRow</span>(it) }
+}
+<span class="kw">@Composable fun</span> <span class="fn">UserRow</span>(user: <span class="type">User</span>) { <span class="fn">Text</span>(user.<span class="prop">name</span>) }
+<span class="kw">@Composable fun</span> <span class="fn">SelectedLabel</span>(id: <span class="type">Int</span>) { <span class="fn">Text</span>(<span class="str">"Selected: $id"</span>) }
+
+<span class="comment">// users === previousUsers; selectedId: 1 → 2</span></code></pre>
+    <p>哪個結果最準確？</p>
+    <div class="option-list">
+      <button class="option" data-key="A" data-correct="true" data-explanation="Screen 因 selectedId 改變而重新進入。UserList 的 List 參數雖然 unstable，但 strong skipping 會對 unstable parameter 使用 referential equality；同一個 instance 因此可以 skip。UserList 被 skip 後，UserRow 不會被重新處理。SelectedLabel 的 Int 改變，因此執行。">A．Screen 與 SelectedLabel 執行；UserList 與 UserRow 被 skip</button>
+      <button class="option" data-key="B" data-correct="false" data-explanation="Screen 與 SelectedLabel 確實會因 selectedId 改變而處理，但 strong skipping 允許 UserList 針對同一個 unstable List instance skip；因此不能說四個 composable 都執行。">B．四個 composable 都重新執行</button>
+      <button class="option" data-key="C" data-correct="false" data-explanation="SelectedLabel 的 id 已由 1 變成 2，參數改變，所以它不能 skip。此選項也忽略 strong skipping 對 UserList 的影響。">C．Screen 與 UserList 執行；UserRow 與 SelectedLabel 被 skip</button>
+    </div>
+    <div class="button-row"><button class="button submit" disabled>提交此題</button><span class="muted hint">請先選擇預測</span></div>
+    <div class="feedback"></div><div class="review"></div>
+    <div class="button-row next-row" style="display:none"><button class="button secondary next">進入情境 2</button></div>
+  </section>
+
+  <section class="panel question" id="q2" data-task="compose-strong-skipping-02" data-title="Compose Runtime：strong skipping 情境 2" style="display:none">
+    <h2>情境 2：關閉 strong skipping</h2>
+    <p class="context">其他條件相同：<code>users</code> 是同一個 <code>List&lt;User&gt;</code> instance，只有 <code>selectedId</code> 改變；<code>UserList</code> 仍接收 abstract <code>List</code>。</p>
+    <p>哪個描述最精確？</p>
+    <div class="option-list">
+      <button class="option" data-key="A" data-correct="false" data-explanation="沒有 strong skipping 時，unstable List 可能使 UserList 不具備一般 skip 條件；不能只因 instance 沒變，就斷言它一定被 skip。">A．UserList 一定被 skip，因為 List instance 沒變</button>
+      <button class="option" data-key="B" data-correct="true" data-explanation="沒有 strong skipping 時，unstable List 可能使 UserList 重新執行。若改用 Compose runtime 可辨識的 ImmutableList，stability 資訊會更可靠；此時可再依內容相等性判斷是否 skip。">B．UserList 可能重新執行；ImmutableList 能提供更可靠的 stability 資訊</button>
+      <button class="option" data-key="C" data-correct="false" data-explanation="selectedId 改變時，SelectedLabel 仍需處理；而 UserList 是否 skip 取決於 unstable List 與 strong skipping，不能說只有 UserList 執行。">C．只有 UserList 執行，其他 composable 都一定 skip</button>
+    </div>
+    <div class="button-row"><button class="button submit" disabled>提交此題</button><span class="muted hint">請先選擇預測</span></div>
+    <div class="feedback"></div><div class="review"></div>
+  </section>
+
+  <section class="panel final-report" style="display:none"><h2>本次 evidence 已產生</h2><p class="context">本機網站已記錄事件並更新「待 tutor review」狀態。下載這份 report，帶回對話後，tutor 才會正式更新持久化 learner state 與下一個 frontier。</p><div class="report" id="report"></div><div class="button-row"><button class="button green" id="download">下載 evidence report</button><a class="button secondary" href="history.html">查看紀錄</a></div></section>
+  <div class="status" id="status">進度：尚未提交任何題目</div>
+</main>
+<script src="app.js"></script>
+<script>
+  const state = window.TUTOR.loadState();
+  const sessionId = crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now();
+  const events = [], answers = []; let completed = 0;
+  function emit(type, taskId, payload) { events.push({ session_id: sessionId, task_id: taskId, representation_id: 'compose-runtime-code-trace-v3', event_id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + events.length), timestamp: new Date().toISOString(), schema_version: '1.0', semantic_type: type, payload }); }
+  function showReview(section, selected) {
+    const review = section.querySelector('.review'); review.innerHTML = '<h3>逐項解析</h3>';
+    [...section.querySelectorAll('.option')].forEach(option => {
+      const correct = option.dataset.correct === 'true', chosen = option === selected;
+      const item = document.createElement('div'); item.className = 'review-item ' + (correct ? 'correct-answer' : chosen ? 'selected-wrong' : '');
+      item.innerHTML = '<div class="review-label">' + (correct ? '✓ 正確選項　' : chosen ? '△ 你的選擇　' : '　') + option.dataset.key + '</div><div>' + option.textContent + '</div><div class="review-explanation">' + option.dataset.explanation + '</div>';
+      review.appendChild(item);
+    });
+  }
+  function wire(section) {
+    const options = [...section.querySelectorAll('.option')], submit = section.querySelector('.submit'); let selected = null;
+    options.forEach(option => option.addEventListener('click', () => { if (section.dataset.submitted) return; options.forEach(item => item.classList.remove('selected')); option.classList.add('selected'); selected = option; submit.disabled = false; section.querySelector('.hint').textContent = '已選擇 ' + option.dataset.key + '，確認後按提交'; emit('prediction_selected', section.dataset.task, { choice: option.dataset.key, assistance: false }); }));
+    submit.addEventListener('click', () => {
+      if (!selected || section.dataset.submitted) return; section.dataset.submitted = 'true'; submit.disabled = true; options.forEach(item => item.disabled = true);
+      const correct = selected.dataset.correct === 'true'; emit('prediction_submitted', section.dataset.task, { choice: selected.dataset.key, independent: true, hint_requested: false, answer_leakage: false }); emit('answer_submitted', section.dataset.task, { choice: selected.dataset.key }); emit('verification_result', section.dataset.task, { correct, verifier: 'deterministic_local_answer_key' });
+      answers.push({ task_id: section.dataset.task, selected: selected.dataset.key, correct }); completed += 1; section.querySelector('.feedback').className = 'feedback show ' + (correct ? 'correct' : 'wrong'); section.querySelector('.feedback').innerHTML = (correct ? '<strong>✓ 判斷正確</strong>' : '<strong>△ 這個選項不正確</strong>') + '<br>' + selected.dataset.explanation; showReview(section, selected);
+      document.getElementById('status').textContent = correct ? '進度：本題正確，已取得 transfer evidence' : '進度：本題已記錄混淆，請閱讀逐項解析'; if (section.id === 'q1') section.querySelector('.next-row').style.display = 'flex'; if (completed === 2) finish();
+    });
+  }
+  function finish() {
+    emit('task_completed', 'compose-runtime-diagnostic', { completed_questions: completed, total_questions: 2 });
+    const report = { protocol: 'Interactive Evidence Protocol', schema_version: '1.0', session_id: sessionId, task_id: 'compose-runtime-diagnostic', representation_id: 'compose-runtime-code-trace-v3', started_at: new Date().toISOString(), completed_at: new Date().toISOString(), learner_context: { domain: 'Android Compose Runtime', language: 'zh-Hant' }, answers, evidence_events: events, note: 'Evidence is pending tutor review; local verification does not itself finalize mastery.' };
+    const history = state.history || []; answers.forEach(answer => history.push({ timestamp: new Date().toISOString(), title: document.querySelector(`[data-task="${answer.task_id}"]`).dataset.title, correct: answer.correct, independent: true, eventCount: events.filter(event => event.task_id === answer.task_id).length })); state.history = history; state.nodes[2].status = '有新 evidence，待 tutor review'; state.nodes[2].lastEvidence = new Date().toISOString(); window.TUTOR.saveState(state);
+    document.querySelector('.final-report').style.display = 'block'; document.getElementById('report').textContent = JSON.stringify(report, null, 2); document.getElementById('status').textContent = '進度：兩題完成，請下載 report 帶回 tutor';
+  }
+  wire(document.getElementById('q1')); wire(document.getElementById('q2'));
+  document.querySelector('#q1 .next').addEventListener('click', () => { const q2 = document.getElementById('q2'); q2.style.display = 'block'; q2.scrollIntoView({ behavior: 'smooth' }); });
+  document.getElementById('download').addEventListener('click', () => { const blob = new Blob([document.getElementById('report').textContent], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'compose-runtime-evidence-report.json'; link.click(); URL.revokeObjectURL(link.href); });
+</script>
+</body>
+</html>
